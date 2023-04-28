@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import Row from "./row";
 import {Button} from 'evergreen-ui';
 import tableStyles from "./table.module.css";
-import {User, Expenses, Category, Categories, Users, Expense, TrackerContextType, TableType, TrackerContext} from '../../types'
+import { TableType } from '../../types'
 const CATEGORY = { 1: "FOOD", 2: "TRAVEL", 3: "SUPPLIES" };
 
 export default function Table({ title, rows, saveRow, addRow, deleteRow , columnHeaders}: TableType) {

@@ -2,21 +2,10 @@ import React, { useContext, useState } from "react";
 import ReactDOM from "react-dom";
 import { Table } from "evergreen-ui";
 import tableStyles from "./table.module.css";
+import { Category, TrackerContext } from "../../types";
 
-import {
-  User,
-  Expenses,
-  Category,
-  Categories,
-  Users,
-  Expense,
-  TrackerContextType,
-  TableType,
-  TrackerContext,
-} from "../../types";
 export default function CategoryTotals() {
   let { categoryTotals } = useContext(TrackerContext);
-
   const defaultTotal: Category = {
     food: 0,
     travel: 0,

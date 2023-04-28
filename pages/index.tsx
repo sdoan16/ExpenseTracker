@@ -12,7 +12,6 @@ import {
   Categories,
   Users,
   Expense,
-  TrackerContextType,
   TrackerContext,
 } from "../types";
 import categoryTotals from "../components/table/categoryTotals";

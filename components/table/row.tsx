@@ -1,21 +1,12 @@
-import React, {
-  useState,
-  useEffect,
-  useContext,
-} from "react";
+import React, { useState, useEffect, useContext } from "react";
 import tableStyles from "./table.module.css";
 import {
   User,
-  Expenses,
-  Category,
-  Categories,
-  Users,
   Expense,
   TrackerContextType,
-  TableType,
   TrackerContext,
   RowType,
-  Row
+  Row,
 } from "../../types";
 import {
   SelectField,
@@ -58,8 +49,7 @@ export default function Row({
 
   const onSaveClick = () => {
     //Check for missing fields
-    let index = columns.findIndex(
-      (col, i) => row[col.id] === "");
+    let index = columns.findIndex((col, i) => row[col.id] === "");
     if (index > -1) {
       setShowAlert(true);
       return;
