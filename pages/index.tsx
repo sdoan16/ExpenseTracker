@@ -79,7 +79,7 @@ export default function Tracker() {
       values.forEach((value) => {
         let category = value.category;
         if (newTotal[category] > -1) {
-          newTotal[category] = newTotal[category] + parseInt(value.cost);
+          newTotal[category] = newTotal[category] + parseFloat(value.cost);
         }
       });
     }
@@ -98,18 +98,18 @@ export default function Tracker() {
     //Changed users
     if (oldId.length && oldId !== userId) {
       userCopy[oldId].expenses =
-        parseInt(userCopy[oldId].expenses) - parseInt(oldExpenses);
+        parseFloat(userCopy[oldId].expenses) - parseFloat(oldExpenses);
       userCopy[userId].expenses =
-        parseInt(userCopy[userId].expenses) + parseInt(data.cost);
+        parseFloat(userCopy[userId].expenses) + parseFloat(data.cost);
     }
     //update existing expense
     else if (expenses[data.id].userId.length > 0) {
-      let diff = parseInt(newExpenses) - parseInt(oldExpenses);
-      userCopy[oldId].expenses = parseInt(userCopy[oldId].expenses) + diff;
+      let diff = parseFloat(newExpenses) - parseFloat(oldExpenses);
+      userCopy[oldId].expenses = parseFloat(userCopy[oldId].expenses) + diff;
     } else {
       //added new expense
       let user = userCopy[data.userId];
-      user.expenses = parseInt(user.expenses) + parseInt(data.cost);
+      user.expenses = parseFloat(user.expenses) + parseFloat(data.cost);
     }
     setUsers(userCopy);
     setExpenses({ ...expenses, [data.id]: data });
@@ -140,7 +140,7 @@ export default function Tracker() {
     let userId = expense.userId;
     let user = userCopy[expense.userId];
     userCopy[expense.userId].expenses =
-      parseInt(user.expenses) - parseInt(expense.cost);
+      parseFloat(user.expenses) - parseFloat(expense.cost);
     delete exp[id];
     setUsers(userCopy);
     countCategoryTotals(exp);
