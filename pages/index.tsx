@@ -67,6 +67,7 @@ export default function Tracker() {
     setUsers({ ...users, [user.id]: user });
   };
 
+  //Recount total expenses for each category to update 3rd table
   const countCategoryTotals = (copy: Expenses) => {
     let values = Object.values(copy);
     let newTotal: Categories = {
