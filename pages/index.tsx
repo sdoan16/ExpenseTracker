@@ -22,19 +22,9 @@ const USER_COLUMNS = [
   { label: "Total Expenses", type: "text", id: "expenses" },
 ];
 
-const EXPENSES_COLUMNS: {
-  label: string;
-  type: string;
-  options?: [];
-  id: string;
-}[] = [
+const EXPENSES_COLUMNS = [
   { label: "Full Name", type: "select", options: [], id: "userId" },
-  {
-    label: "Category",
-    type: "select",
-    options: [],
-    id: "category",
-  },
+  { label: "Category", type: "select", options: [], id: "category" },
   { label: "Description", type: "input", id: "description" },
   { label: "Cost", type: "number", id: "cost" },
 ];
@@ -47,77 +37,53 @@ export default function Tracker() {
     travel: 0,
     equipment: 0,
   });
-
+  const usersLength = Object.keys(users).length;
+  const expensesLength = Object.keys(expenses).length;
   useEffect(() => {
-    const usersLength = Object.keys(users).length;
     if (usersLength === 0) {
       addNewUser();
     }
-  }, [Object.keys(users).length]);
+  }, [usersLength]);
 
   useEffect(() => {
-    const expensesLength = Object.keys(expenses).length === 0;
-    if (expensesLength) {
+    if (expensesLength === 0) {
       addNewExpense();
     }
-  }, [Object.keys(expenses).length]);
+  }, [expensesLength]);
 
   const saveUser = (user: User) => {
     user.fullName = `${user.firstName} ${user.lastName}`;
     setUsers({ ...users, [user.id]: user });
   };
 
-  //Recount total expenses for each category to update 3rd table
-  const countCategoryTotals = (copy: Expenses) => {
-    let values = Object.values(copy);
-    let newTotal: Categories = {
-      food: 0,
-      travel: 0,
-      equipment: 0,
-    };
-    if (values.length) {
-      values.forEach((value) => {
-        let category = value.category;
-        if (newTotal[category] > -1) {
-          newTotal[category] = newTotal[category] + parseFloat(value.cost);
-        }
-      });
-    }
-    setCategoryTotals(newTotal);
-  };
-
   const saveExpense = (data: Expense) => {
-    let userId = data.userId;
-    let oldId = expenses[data.id]?.userId;
-    let oldExpenses = expenses[data.id]?.cost;
-    let newExpenses = data.cost;
     let userCopy = { ...users };
     let categoryCopy = { ...categoryTotals };
     let expensesCopy = { ...expenses };
-
-    //Changed users
-    if (oldId.length && oldId !== userId) {
-      userCopy[oldId].expenses =
-        parseFloat(userCopy[oldId].expenses) - parseFloat(oldExpenses);
-      userCopy[userId].expenses =
-        parseFloat(userCopy[userId].expenses) + parseFloat(data.cost);
-    }
     //update existing expense
-    else if (expenses[data.id].userId.length > 0) {
-      let diff = parseFloat(newExpenses) - parseFloat(oldExpenses);
-      userCopy[oldId].expenses = parseFloat(userCopy[oldId].expenses) + diff;
+    if (expenses[data.id].userId.length > 0) {
+      const currentExpense = expenses[data.id];
+      let oldCategory = expenses[data.id].category;
+      userCopy[currentExpense.userId].expenses =
+        parseFloat(userCopy[currentExpense.userId].expenses) -
+        parseFloat(currentExpense.cost);
+      userCopy[data.userId].expenses =
+        parseFloat(userCopy[data.userId].expenses) + parseFloat(data.cost);
+      categoryCopy[oldCategory] -= parseFloat(currentExpense.cost);
+      
     } else {
       //added new expense
       let user = userCopy[data.userId];
       user.expenses = parseFloat(user.expenses) + parseFloat(data.cost);
     }
+    categoryCopy[data.category] += parseFloat(data.cost);
     setUsers(userCopy);
+    setCategoryTotals(categoryCopy);
     setExpenses({ ...expenses, [data.id]: data });
-    countCategoryTotals({ ...expensesCopy, [data.id]: data });
   };
 
   const addNewUser = () => {
-    let userId = nanoid();
+    let userId = nanoid(6);
     const newUser = {
       id: userId,
       firstName: "",
@@ -131,24 +97,26 @@ export default function Tracker() {
   const deleteExpense = (id: string) => {
     let userCopy = { ...users };
     let exp = { ...expenses };
+    let categoryCopy = { ...categoryTotals };
     let expense = exp[id];
     if (!expense.userId) {
       delete exp[id];
       setExpenses(exp);
       return;
     }
-    let userId = expense.userId;
     let user = userCopy[expense.userId];
     userCopy[expense.userId].expenses =
       parseFloat(user.expenses) - parseFloat(expense.cost);
+    // //subtract cost of the deleted expense from the corresponding category in categoriesTotal
+    categoryCopy[expense.category] -= parseFloat(expense.cost);
     delete exp[id];
     setUsers(userCopy);
-    countCategoryTotals(exp);
+    setCategoryTotals(categoryCopy);
     setExpenses({ ...exp });
   };
 
   const addNewExpense = () => {
-    let expenseId = nanoid();
+    let expenseId = nanoid(6);
     setExpenses({
       ...expenses,
       [expenseId]: {
@@ -163,17 +131,23 @@ export default function Tracker() {
 
   const deleteUser = (id: string) => {
     let usersCopy = { ...users };
-    let expensesCopy = { ...expenses };
-    let entries = [...Object.keys(expenses)];
-    if (entries.length > 0) {
+    //If a user's total expenses is equal to 0 then they have no expenses to delete
+    if (users[id].expenses > 0) {
+      let expensesCopy = { ...expenses };
+      let categoryCopy = { ...categoryTotals };
+      let entries = [...Object.keys(expenses)];
       entries.forEach((key) => {
         if (expensesCopy[key].userId === id) {
+          let category = expensesCopy[key].category;
+          let cost = expensesCopy[key].cost;
+          //subtract cost of the deleted expense from the corresponding category in categoriesTotal
+          categoryCopy[category] = categoryCopy[category] - parseFloat(cost);
           delete expensesCopy[key];
         }
       });
+      setExpenses(expensesCopy);
+      setCategoryTotals(categoryCopy);
     }
-    countCategoryTotals(expensesCopy);
-    setExpenses(expensesCopy);
     delete usersCopy[id];
     setUsers(usersCopy);
   };
@@ -188,7 +162,6 @@ export default function Tracker() {
           <div id="users-table">
             <div className={utilStyles.header}>Users</div>
             <Table
-              title=""
               rows={users}
               saveRow={saveUser}
               addRow={addNewUser}
@@ -199,7 +172,6 @@ export default function Tracker() {
           <div id="expenses-table">
             <div className={utilStyles.header}>Expenses</div>
             <Table
-              title=""
               rows={expenses}
               saveRow={saveExpense}
               addRow={addNewExpense}
