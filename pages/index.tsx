@@ -22,19 +22,9 @@ const USER_COLUMNS = [
   { label: "Total Expenses", type: "text", id: "expenses" },
 ];
 
-const EXPENSES_COLUMNS: {
-  label: string;
-  type: string;
-  options?: [];
-  id: string;
-}[] = [
+const EXPENSES_COLUMNS = [
   { label: "Full Name", type: "select", options: [], id: "userId" },
-  {
-    label: "Category",
-    type: "select",
-    options: [],
-    id: "category",
-  },
+  { label: "Category", type: "select", options: [], id: "category" },
   { label: "Description", type: "input", id: "description" },
   { label: "Cost", type: "number", id: "cost" },
 ];
@@ -68,25 +58,21 @@ export default function Tracker() {
   };
 
   const saveExpense = (data: Expense) => {
-    let userId = data.userId;
-    let oldId = expenses[data.id]?.userId;
-    let oldExpenses = expenses[data.id]?.cost;
-    let newExpenses = data.cost;
     let userCopy = { ...users };
     let categoryCopy = { ...categoryTotals };
     let expensesCopy = { ...expenses };
 
     //update existing expense
     if (expenses[data.id].userId.length > 0) {
+      const currentExpense = expenses[data.id];
       let oldCategory = expenses[data.id].category;
-      userCopy[oldId].expenses =
-        parseFloat(userCopy[oldId].expenses) - parseFloat(oldExpenses);
-      userCopy[userId].expenses =
-        parseFloat(userCopy[userId].expenses) + parseFloat(data.cost);
-      categoryCopy[oldCategory] =
-        categoryCopy[oldCategory] - parseFloat(oldExpenses);
-      categoryCopy[data.category] =
-        categoryCopy[data.category] + parseFloat(data.cost);
+      userCopy[currentExpense.userId].expenses =
+        parseFloat(userCopy[currentExpense.userId].expenses) -
+        parseFloat(currentExpense.cost);
+      userCopy[data.userId].expenses =
+        parseFloat(userCopy[data.userId].expenses) + parseFloat(data.cost);
+      categoryCopy[oldCategory] -= parseFloat(currentExpense.cost);
+      categoryCopy[data.category] += parseFloat(data.cost);
     } else {
       //added new expense
       let user = userCopy[data.userId];
@@ -100,7 +86,7 @@ export default function Tracker() {
   };
 
   const addNewUser = () => {
-    let userId = nanoid();
+    let userId = nanoid(6);
     const newUser = {
       id: userId,
       firstName: "",
@@ -121,12 +107,10 @@ export default function Tracker() {
       setExpenses(exp);
       return;
     }
-    let userId = expense.userId;
     let user = userCopy[expense.userId];
     userCopy[expense.userId].expenses =
       parseFloat(user.expenses) - parseFloat(expense.cost);
-    categoryCopy[expense.category] =
-      categoryCopy[expense.category] - parseFloat(expense.cost);
+    categoryCopy[expense.category] -= parseFloat(expense.cost);
     delete exp[id];
     setUsers(userCopy);
     setCategoryTotals(categoryCopy);
@@ -134,7 +118,7 @@ export default function Tracker() {
   };
 
   const addNewExpense = () => {
-    let expenseId = nanoid();
+    let expenseId = nanoid(6);
     setExpenses({
       ...expenses,
       [expenseId]: {
@@ -153,16 +137,14 @@ export default function Tracker() {
       let expensesCopy = { ...expenses };
       let categoryCopy = { ...categoryTotals };
       let entries = [...Object.keys(expenses)];
-      if (entries.length > 0) {
-        entries.forEach((key) => {
-          if (expensesCopy[key].userId === id) {
-            let category = expensesCopy[key].category;
-            let cost = expensesCopy[key].cost;
-            categoryCopy[category] = categoryCopy[category] - parseFloat(cost);
-            delete expensesCopy[key];
-          }
-        });
-      }
+      entries.forEach((key) => {
+        if (expensesCopy[key].userId === id) {
+          let category = expensesCopy[key].category;
+          let cost = expensesCopy[key].cost;
+          categoryCopy[category] = categoryCopy[category] - parseFloat(cost);
+          delete expensesCopy[key];
+        }
+      });
       setExpenses(expensesCopy);
       setCategoryTotals(categoryCopy);
     }
