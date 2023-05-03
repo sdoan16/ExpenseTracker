@@ -47,43 +47,24 @@ export default function Tracker() {
     travel: 0,
     equipment: 0,
   });
+  const usersLength = Object.keys(users).length;
+  const expensesLength = Object.keys(expenses).length === 0;
 
   useEffect(() => {
-    const usersLength = Object.keys(users).length;
     if (usersLength === 0) {
       addNewUser();
     }
-  }, [Object.keys(users).length]);
+  }, [usersLength]);
 
   useEffect(() => {
-    const expensesLength = Object.keys(expenses).length === 0;
     if (expensesLength) {
       addNewExpense();
     }
-  }, [Object.keys(expenses).length]);
+  }, [expensesLength]);
 
   const saveUser = (user: User) => {
     user.fullName = `${user.firstName} ${user.lastName}`;
     setUsers({ ...users, [user.id]: user });
-  };
-
-  //Recount total expenses for each category to update 3rd table
-  const countCategoryTotals = (copy: Expenses) => {
-    let values = Object.values(copy);
-    let newTotal: Categories = {
-      food: 0,
-      travel: 0,
-      equipment: 0,
-    };
-    if (values.length) {
-      values.forEach((value) => {
-        let category = value.category;
-        if (newTotal[category] > -1) {
-          newTotal[category] = newTotal[category] + parseFloat(value.cost);
-        }
-      });
-    }
-    setCategoryTotals(newTotal);
   };
 
   const saveExpense = (data: Expense) => {
@@ -95,25 +76,27 @@ export default function Tracker() {
     let categoryCopy = { ...categoryTotals };
     let expensesCopy = { ...expenses };
 
-    //Changed users
-    if (oldId.length && oldId !== userId) {
+    //update existing expense
+    if (expenses[data.id].userId.length > 0) {
+      let oldCategory = expenses[data.id].category;
       userCopy[oldId].expenses =
         parseFloat(userCopy[oldId].expenses) - parseFloat(oldExpenses);
       userCopy[userId].expenses =
         parseFloat(userCopy[userId].expenses) + parseFloat(data.cost);
-    }
-    //update existing expense
-    else if (expenses[data.id].userId.length > 0) {
-      let diff = parseFloat(newExpenses) - parseFloat(oldExpenses);
-      userCopy[oldId].expenses = parseFloat(userCopy[oldId].expenses) + diff;
+      categoryCopy[oldCategory] =
+        categoryCopy[oldCategory] - parseFloat(oldExpenses);
+      categoryCopy[data.category] =
+        categoryCopy[data.category] + parseFloat(data.cost);
     } else {
       //added new expense
       let user = userCopy[data.userId];
       user.expenses = parseFloat(user.expenses) + parseFloat(data.cost);
+      categoryCopy[data.category] =
+        categoryCopy[data.category] + parseFloat(data.cost);
     }
     setUsers(userCopy);
+    setCategoryTotals(categoryCopy);
     setExpenses({ ...expenses, [data.id]: data });
-    countCategoryTotals({ ...expensesCopy, [data.id]: data });
   };
 
   const addNewUser = () => {
@@ -131,6 +114,7 @@ export default function Tracker() {
   const deleteExpense = (id: string) => {
     let userCopy = { ...users };
     let exp = { ...expenses };
+    let categoryCopy = { ...categoryTotals };
     let expense = exp[id];
     if (!expense.userId) {
       delete exp[id];
@@ -141,9 +125,11 @@ export default function Tracker() {
     let user = userCopy[expense.userId];
     userCopy[expense.userId].expenses =
       parseFloat(user.expenses) - parseFloat(expense.cost);
+    categoryCopy[expense.category] =
+      categoryCopy[expense.category] - parseFloat(expense.cost);
     delete exp[id];
     setUsers(userCopy);
-    countCategoryTotals(exp);
+    setCategoryTotals(categoryCopy);
     setExpenses({ ...exp });
   };
 
@@ -163,17 +149,23 @@ export default function Tracker() {
 
   const deleteUser = (id: string) => {
     let usersCopy = { ...users };
-    let expensesCopy = { ...expenses };
-    let entries = [...Object.keys(expenses)];
-    if (entries.length > 0) {
-      entries.forEach((key) => {
-        if (expensesCopy[key].userId === id) {
-          delete expensesCopy[key];
-        }
-      });
+    if (users[id].expenses > 0) {
+      let expensesCopy = { ...expenses };
+      let categoryCopy = { ...categoryTotals };
+      let entries = [...Object.keys(expenses)];
+      if (entries.length > 0) {
+        entries.forEach((key) => {
+          if (expensesCopy[key].userId === id) {
+            let category = expensesCopy[key].category;
+            let cost = expensesCopy[key].cost;
+            categoryCopy[category] = categoryCopy[category] - parseFloat(cost);
+            delete expensesCopy[key];
+          }
+        });
+      }
+      setExpenses(expensesCopy);
+      setCategoryTotals(categoryCopy);
     }
-    countCategoryTotals(expensesCopy);
-    setExpenses(expensesCopy);
     delete usersCopy[id];
     setUsers(usersCopy);
   };
