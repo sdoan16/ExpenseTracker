@@ -38,8 +38,7 @@ export default function Tracker() {
     equipment: 0,
   });
   const usersLength = Object.keys(users).length;
-  const expensesLength = Object.keys(expenses).length === 0;
-
+  const expensesLength = Object.keys(expenses).length;
   useEffect(() => {
     if (usersLength === 0) {
       addNewUser();
@@ -47,7 +46,7 @@ export default function Tracker() {
   }, [usersLength]);
 
   useEffect(() => {
-    if (expensesLength) {
+    if (expensesLength === 0) {
       addNewExpense();
     }
   }, [expensesLength]);
@@ -71,14 +70,13 @@ export default function Tracker() {
       userCopy[data.userId].expenses =
         parseFloat(userCopy[data.userId].expenses) + parseFloat(data.cost);
       categoryCopy[oldCategory] -= parseFloat(currentExpense.cost);
-      categoryCopy[data.category] += parseFloat(data.cost);
+      
     } else {
       //added new expense
       let user = userCopy[data.userId];
       user.expenses = parseFloat(user.expenses) + parseFloat(data.cost);
-      categoryCopy[data.category] =
-        categoryCopy[data.category] + parseFloat(data.cost);
     }
+    categoryCopy[data.category] += parseFloat(data.cost);
     setUsers(userCopy);
     setCategoryTotals(categoryCopy);
     setExpenses({ ...expenses, [data.id]: data });
