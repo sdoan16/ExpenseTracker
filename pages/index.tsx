@@ -61,7 +61,6 @@ export default function Tracker() {
     let userCopy = { ...users };
     let categoryCopy = { ...categoryTotals };
     let expensesCopy = { ...expenses };
-
     //update existing expense
     if (expenses[data.id].userId.length > 0) {
       const currentExpense = expenses[data.id];
@@ -110,6 +109,7 @@ export default function Tracker() {
     let user = userCopy[expense.userId];
     userCopy[expense.userId].expenses =
       parseFloat(user.expenses) - parseFloat(expense.cost);
+    // //subtract cost of the deleted expense from the corresponding category in categoriesTotal
     categoryCopy[expense.category] -= parseFloat(expense.cost);
     delete exp[id];
     setUsers(userCopy);
@@ -133,6 +133,7 @@ export default function Tracker() {
 
   const deleteUser = (id: string) => {
     let usersCopy = { ...users };
+    //If a user's total expenses is equal to 0 then they have no expenses to delete
     if (users[id].expenses > 0) {
       let expensesCopy = { ...expenses };
       let categoryCopy = { ...categoryTotals };
@@ -141,6 +142,7 @@ export default function Tracker() {
         if (expensesCopy[key].userId === id) {
           let category = expensesCopy[key].category;
           let cost = expensesCopy[key].cost;
+          //subtract cost of the deleted expense from the corresponding category in categoriesTotal
           categoryCopy[category] = categoryCopy[category] - parseFloat(cost);
           delete expensesCopy[key];
         }
@@ -162,7 +164,6 @@ export default function Tracker() {
           <div id="users-table">
             <div className={utilStyles.header}>Users</div>
             <Table
-              title=""
               rows={users}
               saveRow={saveUser}
               addRow={addNewUser}
@@ -173,7 +174,6 @@ export default function Tracker() {
           <div id="expenses-table">
             <div className={utilStyles.header}>Expenses</div>
             <Table
-              title=""
               rows={expenses}
               saveRow={saveExpense}
               addRow={addNewExpense}

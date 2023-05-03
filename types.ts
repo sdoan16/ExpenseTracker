@@ -65,7 +65,6 @@ export type User= {
   }
  
   export type TableType  = {
-    title: string;
     rows: Users | Expenses;
     saveRow: React.Dispatch<React.SetStateAction<any>>;
     addRow: React.Dispatch<React.SetStateAction<any>>;
